@@ -216,7 +216,6 @@ if __name__ == '__main__':
     #import_from_csv('inventory.csv')
     import_from_csv('inventory_backup.csv')
     display_menu()
-
     db.close()
     clear()
     print("Thank you for using the product management tool.\nGoodbye.")
