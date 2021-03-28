@@ -6,4 +6,4 @@ The application reads from an existing 'inventory.csv' file to populate the data
 User can interact with application to view existing product data, add/update products, and 
 backup the entire product list to to a 'backup.csv' file.
 
-backup.csv is formatted similar to the 'inventory.csv' file and can also be used to initialize the database with data.
+Note: the 'backup.csv' is formatted similar to the 'inventory.csv' file and can also be used to initialize the database with data.
