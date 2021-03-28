@@ -22,9 +22,9 @@ def initialize():
     db.connect()
     db.create_tables([Product], safe=True)
 
-def import_from_csv():
+def import_from_csv(backup_file):
     """Import the data from the inventory.csv file as a dictionary"""
-    with open('inventory.csv', newline='') as csvfile:
+    with open(backup_file, newline='') as csvfile:
         inventory_reader = csv.DictReader(csvfile)
         inventory_list = list(inventory_reader)
     for row in inventory_list:
@@ -104,21 +104,19 @@ def existing_product():
             #Exit this loop
             clear()
             break
-        # try:
-        
-        # Find the matching record and print the formatted details for each field.
-        matching_record = Product.get(product_id=user_id_choice)
-        print()
-        format_product_data_from_db(matching_record, True)
-        print()
-        if input('Press any key to continue.').lower().strip() == 'b':
+        try:
+            # Find the matching record and print the formatted details for each field.
+            matching_record = Product.get(product_id=user_id_choice)
+            print()
+            format_product_data_from_db(matching_record, True, True)
+            print()
+            if input('Press any key to continue.').lower().strip() == 'b':
+                clear()
+                break
             clear()
-            break
-        clear()
-        
-        # except:
-        #     clear()
-        #     print('Product with Entered ID does not exist. Try again.')
+        except:
+            clear()
+            print('Product with Entered ID does not exist. Try again.')
 
 def new_product():
     """Add a new product to the database."""
@@ -137,10 +135,10 @@ def new_product():
         write_results = write_to_db(the_formatted_data)
         if write_results == True:
             input(f"Successfully added '{new_name}' to product inventory.\n" +
-                    'Returning to Main Meny. Press any key to continue')
-        elif write_results == False:
+                    'Returning to Main Menu. Press any key to continue')
+        else:
             input(f"Product already exists, successfully updated '{new_name}' in product inventory.\n" +
-                    'Returning to Main Meny. Press any key to continue')
+                    'Returning to Main Menu. Press any key to continue')
     clear()
 
 def backup_db():
@@ -148,8 +146,7 @@ def backup_db():
     display_welcome_message("Save a backup of the current product database.")
     
     with open('inventory_backup.csv', 'w') as csv_backup_file:
-        field_names = ['product_id',
-                        'product_name',
+        field_names = ['product_name',
                         'product_quantity',
                         'product_price',
                         'date_updated',
@@ -159,31 +156,45 @@ def backup_db():
 
         all_records = Product.select()
         for record in all_records:
-            record_dict = format_product_data_from_db(record, False)            
+            record_dict = format_product_data_from_db(record, False, False)            
             write_backup.writerow(record_dict)
 
     input('File sucessfully backed up. Press any key to continue.')
     clear()
 
-def format_product_data_from_db(the_record, to_print):
+def format_product_data_from_db(the_record, to_print, include_id):
     """Given A single record from teh inventory database,
     format the various fields into strings stored in a dictionary.
     Print the formatted fields in user-friendly format.
     Return dictionary of formatted string values."""
 
-    formatted_record = OrderedDict([
-        ('product_id', the_record.product_id),
-        ('product_name', the_record.product_name),
-        ('product_price', '${:.2f}'.format(the_record.product_price/100)), 
-        ('product_quantity', the_record.product_quantity),
-        ('date_updated', the_record.date_updated.strftime('%m/%d/%Y')),
-    ])
+    formatted_record = {
+        #'product_id' : the_record.product_id,
+        'product_name' : the_record.product_name,
+        'product_price' : '${:.2f}'.format(the_record.product_price/100), 
+        'product_quantity' : the_record.product_quantity,
+        'date_updated' : the_record.date_updated.strftime('%m/%d/%Y'),
+    }
+
+    if include_id == True:
+        formatted_record['product_id'] = the_record.product_id
+
+    # formatted_record = OrderedDict([
+    #     ('product_id', the_record.product_id),
+    #     ('product_name', the_record.product_name),
+    #     ('product_price', '${:.2f}'.format(the_record.product_price/100)), 
+    #     ('product_quantity', the_record.product_quantity),
+    #     ('date_updated', the_record.date_updated.strftime('%m/%d/%Y')),
+    # ])
+
+
     
     if to_print:
-        print('Product ID: {}'.format(formatted_record['product_id']))
+        if include_id == True:
+            print('Product ID: {}'.format(formatted_record['product_id']))
         print('Product Name: {}'.format(formatted_record['product_name']))
         print('Product Price: {}'.format(formatted_record['product_price']))
-        print('Quantity in Stock: {}'.format(formatted_record['product_qunatity']))
+        print('Quantity in Stock: {}'.format(formatted_record['product_quantity']))
         print('Last Updated: {}'.format(formatted_record['date_updated']))
     
     return formatted_record
@@ -202,7 +213,8 @@ menu = OrderedDict([
 
 if __name__ == '__main__':
     initialize()
-    import_from_csv()
+    #import_from_csv('inventory.csv')
+    import_from_csv('inventory_backup.csv')
     display_menu()
 
     db.close()
